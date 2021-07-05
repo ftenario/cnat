@@ -1,0 +1,7 @@
+apiVersion: cnat.ftenario.dev/v1alpha1
+kind: At
+metadata: 
+  name: at-sample
+spec:
+  schedule: "2021-07-05T10:00:00Z"
+  command: "echo Hello World!"
