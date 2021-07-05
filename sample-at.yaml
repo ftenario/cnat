@@ -3,5 +3,5 @@ kind: At
 metadata:
   name: at-sample
 spec:
-  schedule: "2021-07-05T10:34:00Z"
-  command: "echo Hello World! NEXT"
+  schedule: "2021-07-05T11:34:00Z"
+  command: "echo Hello World! NEXT-4"

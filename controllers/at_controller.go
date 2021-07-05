@@ -18,6 +18,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -74,10 +75,10 @@ func (r *AtReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 		logger.Info("Phase: PENDING")
 		diff, err := schedule.TimeUntilSchedule(instance.Spec.Schedule)
 		if err != nil {
-			// logger.Error(err, "Schedule parsing failure")
+			logger.Error(err, "Schedule parsing failure")
 			return ctrl.Result{}, err
 		}
-		// logger.Info("Schedule parsing done", "Result", fmt.Sprintf("%v", diff))
+		logger.Info("Schedule parsing done", "Result", fmt.Sprintf("%v", diff))
 		if diff > 0 {
 			//not yet time to execute, wait until schedule time then
 			return ctrl.Result{RequeueAfter: diff * time.Second}, nil
