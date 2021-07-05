@@ -18,7 +18,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/go-logr/logr"
@@ -54,8 +53,7 @@ type AtReconciler struct {
 // +kubebuilder:rbac:groups=cnat.ftenario.dev,resources=ats/status,verbs=get;update;patch
 func (r *AtReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := r.Log.WithName("reconciler").WithValues("at", req.NamespacedName)
-	fmt.Println(logger)
-	// logger.Info("---- Reconciling At ------")
+	logger.Info("---- Reconciling At ------")
 
 	instance := &cnatv1alpha1.At{}
 	err := r.Get(context.TODO(), req.NamespacedName, instance)
@@ -73,7 +71,7 @@ func (r *AtReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 	//state transition PENDING -> RUNNING -> DONE
 	switch instance.Status.Phase {
 	case cnatv1alpha1.PhasePending:
-		// logger.Info("Phase: PENDING")
+		logger.Info("Phase: PENDING")
 		diff, err := schedule.TimeUntilSchedule(instance.Spec.Schedule)
 		if err != nil {
 			// logger.Error(err, "Schedule parsing failure")
@@ -85,10 +83,10 @@ func (r *AtReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			return ctrl.Result{RequeueAfter: diff * time.Second}, nil
 		}
 
-		// logger.Info("It's time", "Ready to execute", instance.Spec.Command)
+		logger.Info("It's time", "Ready to execute", instance.Spec.Command)
 		instance.Status.Phase = cnatv1alpha1.PhaseRunning
 	case cnatv1alpha1.PhaseRunning:
-		// logger.Info("Phase: Running")
+		logger.Info("Phase: Running")
 
 		pod := spawn.NewPodForCR(instance)
 		err := ctrl.SetControllerReference(instance, pod, r.Scheme)
@@ -107,27 +105,27 @@ func (r *AtReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Re
 			}
 
 			//successfully created a pod
-			// logger.Info("pod create successfully", "name", pod.Name)
+			logger.Info("pod create successfully", "name", pod.Name)
 			return ctrl.Result{}, nil
 		} else if err != nil {
 			//requeue with error
-			// logger.Error(err, "cannot create pod")
+			logger.Error(err, "cannot create pod")
 			return ctrl.Result{}, err
 		} else if query.Status.Phase == corev1.PodFailed || query.Status.Phase == corev1.PodSucceeded {
 			//pod already finished or error out
-			// logger.Info("container terminated", "reason", query.Status.Reason, "message", query.Status.Message)
+			logger.Info("container terminated", "reason", query.Status.Reason, "message", query.Status.Message)
 
 		} else {
 			//dont requeue, it will happen automatically when pod status change
 			return ctrl.Result{}, nil
 		}
 	case cnatv1alpha1.PhaseDone:
-		// logger.Info("Phase: Done")
+		logger.Info("Phase: Done")
 		//reconcile without requeueing
 		return ctrl.Result{}, nil
 
 	default:
-		// logger.Info("NOP")
+		logger.Info("NOP")
 		return ctrl.Result{}, nil
 	}
 
